@@ -42,9 +42,8 @@ dispatchSimMessages s = dispatchMessageList (messages s) (players s)
 dispatchMessageList :: [Message] -> [Player] -> FleetSim
 dispatchMessageList m p  = FleetSim newMessages newPlayers
     where
-        newMessages  = newMessages'
-        newMessages' = nub $ concat allNewMessages
-        newPlayers   = trace (show maybePlayers) $ catMaybes maybePlayers
+        newMessages  = nub $ concat allNewMessages
+        newPlayers   = catMaybes maybePlayers
         (maybePlayers, allNewMessages) = unzip $ dispatchToPlayers p m
 
 dispatchToPlayers :: [Player] -> [Message] -> [(Maybe Player, [Message])]

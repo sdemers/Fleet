@@ -27,4 +27,4 @@ checkRadio p m
 newPos p = Message 123.4 ["Serge"] (makeInitPosMessage (translate p (Point3D 1.0 1.0 1.0)))
 
 acceptMessage :: Player -> MessageBody -> (Player, [Message])
-acceptMessage p (InitPos m) = trace "InitPos" ((setPosition p (initPos m)), [newPos (initPos m)])
+acceptMessage p (InitPos m) = ((setPosition p (initPos m)), [])

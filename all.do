@@ -2,4 +2,8 @@ redo-ifchange *.hs
 
 exec >&2
 
-ghc --make FleetServ
+GHC=/usr/local/bin/ghc
+
+PACKAGES="-package json"
+
+${GHC} ${PACKAGES} --make FleetServ

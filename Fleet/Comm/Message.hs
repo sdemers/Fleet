@@ -5,7 +5,10 @@ import Fleet.Core.Common
 import Fleet.Core.JSON
 import Text.JSON
 import Control.Applicative
+import Data.List
+import Data.Maybe
 
+-- | Message
 data Message = Message {
     messageFrequency :: Frequency,
     messageRecipients :: [PlayerName],
@@ -20,30 +23,12 @@ instance JSON Message where
             Just s  -> readBody o s
 
 readBody :: JSObject JSValue -> JSValue -> Result Message
-readBody o _            = Error "Unable to read Message"
-readBody o (JSString s) =
-    case (fromJSString s) of
-        "InitialPosition" -> buildMessage <*> (f "body" :: Result MessageInitPos)
-        _                 -> undefined
+readBody o (JSString s) = buildMessage <*> f "body"
     where
         buildMessage = Message <$> f "frequency" <*> f "recipients"
         f x = valFromObj x o
 
-    --case
---Ok $ Message 123.4 ["Toto"] (makeInitPosMessage (Point3D 0.0 0.0 0.0))
---readBody o x =
---Message <$> f "frequency" <*> f "recipients" <*> f "body"
-
-                --"InitialPosition" -> Message <$> f "frequency" <*> f "recipients" <*> f "body"
-                --_                 -> undefined
-            --where
-                --as  = fromJSObject o
-                --f x = valFromObj x o
-
-instance JSONParsable Message where
-    parseJSON s = resultToMaybe $ decode s
-
-showJSONMessage (Message f px (InitPos m)) = showM f px "InitialPosition" m
+showJSONMessage (Message f px (InitPos m)) = showM f px "initialPosition" m
 showJSONMessage (Message f px _)           = undefined
 showM f px name body =
     makeObj [("messageId",  showJSON name),
@@ -51,9 +36,27 @@ showM f px name body =
              ("recipients", showJSON px),
              ("body",       showJSON body)]
 
-data MessageBody  = InitPos     MessageInitPos |
-                    TargetSpeed MessageTargetSpeed
-                    deriving (Eq, Show)
+instance JSONParsable Message where
+    parseJSON s = resultToMaybe $ decode s
+
+data MessageBody = InitPos     MessageInitPos |
+                   TargetSpeed MessageTargetSpeed
+                   deriving (Eq, Show)
+
+instance JSON MessageBody where
+    showJSON (InitPos x)      = makeObj [("initialPosition", showJSON x)]
+    showJSON _                = undefined
+
+    readJSON (JSObject obj) =
+        case find isJust table of
+            Just a  -> readJSON $ fromJust a
+            Nothing -> Error "Unable to read MessageBody"
+        where
+            table = map (flip lookup (fromJSObject obj)) messageTable
+            messageTable = ["initialPosition", "toto"]
+
+instance JSONParsable MessageBody where
+    parseJSON s = resultToMaybe $ decode s
 
 -- | MessageInitPos
 data MessageInitPos = MessageInitPos {

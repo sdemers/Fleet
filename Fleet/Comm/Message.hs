@@ -4,6 +4,8 @@ import Fleet.Comm.Radio
 import Fleet.Core.Common
 import Fleet.Core.JSON
 import Text.JSON
+import Text.JSON.String
+import Text.JSON.Types
 import Control.Applicative
 import Data.List
 import Data.Maybe
@@ -15,45 +17,39 @@ data Message = Message {
     messageBody :: MessageBody
 } deriving (Eq, Show)
 
-instance JSON Message where
-    showJSON = showJSONMessage
-    readJSON (JSObject o) =
-        case "messageId" `lookup` (fromJSObject o) of
-            Nothing -> Error "Unable to read Message"
-            Just s  -> readBody o s
-
-readBody :: JSObject JSValue -> JSValue -> Result Message
-readBody o (JSString s) = buildMessage <*> f "body"
-    where
-        buildMessage = Message <$> f "frequency" <*> f "recipients"
-        f x = valFromObj x o
-
-showJSONMessage (Message f px (InitPos m)) = showM f px "initialPosition" m
-showJSONMessage (Message f px _)           = undefined
-showM f px name body =
-    makeObj [("messageId",  showJSON name),
-             ("frequency",  showJSON f),
-             ("recipients", showJSON px),
-             ("body",       showJSON body)]
-
-instance JSONParsable Message where
-    parseJSON s = resultToMaybe $ decode s
-
+-- | All message constructors shall be declared here
 data MessageBody = InitPos     MessageInitPos |
                    TargetSpeed MessageTargetSpeed
                    deriving (Eq, Show)
 
+instance JSON Message where
+    readJSON (JSObject o) =
+        Message <$> f "frequency" <*> f "recipients" <*> f "body"
+        where
+            f x = valFromObj x o
+    showJSON (Message f r b) = makeObj [("frequency",  showJSON f),
+                                        ("recipients", showJSON r),
+                                        ("body", showJSON b)]
+
+instance JSONParsable Message where
+    parseJSON s = resultToMaybe $ decode s
+
+-- | MessageBody instances
+-- No need to add showJSON instances since we won't use them
+-- As for readJSON, we only need to add them to messageTable
 instance JSON MessageBody where
-    showJSON (InitPos x)      = makeObj [("initialPosition", showJSON x)]
+    showJSON (InitPos x)      = showJSON x
     showJSON _                = undefined
 
-    readJSON (JSObject obj) =
-        case find isJust table of
-            Just a  -> readJSON $ fromJust a
-            Nothing -> Error "Unable to read MessageBody"
-        where
-            table = map (flip lookup (fromJSObject obj)) messageTable
-            messageTable = ["initialPosition", "toto"]
+    readJSON (JSObject o) = Ok $ fromJust $ buildMessageBody o
+
+buildTable o = [(tryBuildMessage o (InitPos, "initialPosition")),
+                (tryBuildMessage o (TargetSpeed, "targetSpeed"))]
+
+buildMessageBody o = fromJust $ find isJust (buildTable o)
+
+tryBuildMessage o (c, m) = resultToMaybe $ c <$> f m
+    where f x = valFromObj x o
 
 instance JSONParsable MessageBody where
     parseJSON s = resultToMaybe $ decode s
@@ -72,9 +68,22 @@ instance JSON MessageInitPos where
 instance JSONParsable MessageInitPos where
     parseJSON s = resultToMaybe $ decode s
 
--- {"position":{"x":0.0,"y":0.1,"z":0.2}}
+-- Example encoded message
+-- {
+--     "frequency":123.4,
+--     "recipients":["Serge"],
+--     "body": {
+--         "initialPosition": {
+--             "position": { "x":0.1, "y":0.2, "z":0.3 }
+--         }
+--     }
+-- }
+showInitPos = encode $ Message 123.4 ["Serge"] (InitPos $ MessageInitPos (Point3D 0.1 0.2 0.3))
 
-showInitPos = encode $ MessageInitPos (Point3D 0.1 0.2 0.3)
+showTargetSpeed = encode $ Message 123.4 ["Serge"] (TargetSpeed $ MessageTargetSpeed 25.0)
+
+encodedInitPos = "{\"frequency\":123.4,\"recipients\":[\"Serge\"],\"body\":{\"initialPosition\":{\"position\":{\"x\":0.1,\"y\":0.2,\"z\":0.3}}}}"
+receivedInitPos = resultToMaybe $ (decode encodedInitPos :: Result Message)
 
 makeInitPosMessage p = InitPos $ MessageInitPos p
 
@@ -82,5 +91,9 @@ makeInitPosMessage p = InitPos $ MessageInitPos p
 data MessageTargetSpeed = MessageTargetSpeed {
     targetSpeed :: Double
 } deriving (Eq, Show)
+
+instance JSON MessageTargetSpeed where
+    showJSON = undefined
+    readJSON = undefined
 
 makeTargetSpeedMessage s = TargetSpeed $ MessageTargetSpeed s

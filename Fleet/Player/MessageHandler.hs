@@ -24,7 +24,5 @@ checkRadio p m
           radioFreqValid = (radioFrequency radio) == (messageFrequency m)
           isRecipient = (getName p) `elem` (messageRecipients m)
 
-newPos p = Message 123.4 ["Serge"] (makeInitPosMessage (translate p (Point3D 1.0 1.0 1.0)))
-
 acceptMessage :: Player -> MessageBody -> (Player, [Message])
 acceptMessage p (InitPos m) = ((setPosition p (initPos m)), [])

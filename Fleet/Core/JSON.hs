@@ -1,7 +1,8 @@
 module Fleet.Core.JSON
 (
     JSONParsable(..),
-    resultToMaybe
+    resultToMaybe,
+    isResult
 )
 where
 
@@ -16,4 +17,7 @@ class JSONParsable a where
 
 eitherToMaybe = either (const Nothing) Just
 resultToMaybe = eitherToMaybe . resultToEither
+
+isResult (Error _) = False
+isResult _         = True
 

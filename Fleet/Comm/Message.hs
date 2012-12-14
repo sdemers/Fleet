@@ -1,14 +1,19 @@
-module Fleet.Comm.Message where
+module Fleet.Comm.Message
+(
+    Message(..),
+    MessageBody(..),
+    MessageInitPos(..),
+    MessageTargetSpeed(..),
+    parseMessage
+)
+where
 
 import Fleet.Comm.Radio
 import Fleet.Core.Common
 import Fleet.Core.JSON
 import Text.JSON
-import Text.JSON.String
-import Text.JSON.Types
 import Control.Applicative
-import Data.List
-import Data.Maybe
+import Data.List(find)
 
 -- | Message
 data Message = Message {
@@ -31,28 +36,28 @@ instance JSON Message where
                                         ("recipients", showJSON r),
                                         ("body", showJSON b)]
 
-instance JSONParsable Message where
-    parseJSON s = resultToMaybe $ decode s
-
 -- | MessageBody instances
 -- No need to add showJSON instances since we won't use them
 -- As for readJSON, we only need to add them to messageTable
 instance JSON MessageBody where
-    showJSON (InitPos x)      = showJSON x
-    showJSON _                = undefined
+    showJSON (InitPos x) = showJSON x
+    showJSON _           = undefined
 
-    readJSON (JSObject o) = Ok $ fromJust $ buildMessageBody o
+    readJSON (JSObject o) = buildMessageBody o
 
-buildTable o = [(tryBuildMessage o (InitPos, "initialPosition")),
-                (tryBuildMessage o (TargetSpeed, "targetSpeed"))]
+buildMessageBody o =
+    case find isResult (applyBuildTable o) of
+        Nothing -> Error "Error: MessageBody not found"
+        Just a  -> a
 
-buildMessageBody o = fromJust $ find isJust (buildTable o)
+buildTable = [(buildMessage InitPos "initialPosition"),
+              (buildMessage TargetSpeed "targetSpeed")]
 
-tryBuildMessage o (c, m) = resultToMaybe $ c <$> f m
-    where f x = valFromObj x o
+applyBuildTable o = map (\f -> f o) buildTable
+buildMessage c m o = c <$> (valFromObj m o)
 
-instance JSONParsable MessageBody where
-    parseJSON s = resultToMaybe $ decode s
+-- | Parses a JSON-formatted string and returns Maybe Message
+parseMessage m = resultToMaybe $ (decode m :: Result Message)
 
 -- | MessageInitPos
 data MessageInitPos = MessageInitPos {
@@ -65,9 +70,6 @@ instance JSON MessageInitPos where
     readJSON (JSObject obj) = MessageInitPos <$> f "position"
         where f x = valFromObj x obj
 
-instance JSONParsable MessageInitPos where
-    parseJSON s = resultToMaybe $ decode s
-
 -- Example encoded message
 -- {
 --     "frequency":123.4,
@@ -78,14 +80,12 @@ instance JSONParsable MessageInitPos where
 --         }
 --     }
 -- }
-showInitPos = encode $ Message 123.4 ["Serge"] (InitPos $ MessageInitPos (Point3D 0.1 0.2 0.3))
 
+showInitPos = encode $ Message 123.4 ["Serge"] (InitPos $ MessageInitPos (Point3D 0.1 0.2 0.3))
 showTargetSpeed = encode $ Message 123.4 ["Serge"] (TargetSpeed $ MessageTargetSpeed 25.0)
 
 encodedInitPos = "{\"frequency\":123.4,\"recipients\":[\"Serge\"],\"body\":{\"initialPosition\":{\"position\":{\"x\":0.1,\"y\":0.2,\"z\":0.3}}}}"
-receivedInitPos = resultToMaybe $ (decode encodedInitPos :: Result Message)
-
-makeInitPosMessage p = InitPos $ MessageInitPos p
+receivedInitPos = parseMessage encodedInitPos
 
 -- | MessageTargetSpeed
 data MessageTargetSpeed = MessageTargetSpeed {
@@ -96,4 +96,3 @@ instance JSON MessageTargetSpeed where
     showJSON = undefined
     readJSON = undefined
 
-makeTargetSpeedMessage s = TargetSpeed $ MessageTargetSpeed s

@@ -4,8 +4,11 @@ import Data.IORef
 import Data.List
 import Data.Maybe
 
+import Control.Concurrent
+
 import Fleet.Core
 import Fleet.Core.Common
+import Fleet.Core.Listener
 import Fleet.Player
 import Fleet.Player.MessageHandler
 import Fleet.Comm.Message
@@ -22,7 +25,7 @@ data FleetSim = FleetSim {
 
 makePilots = [makePilot "Serge" (Radio 123.4 RadioOn)]
 
-initialMessages = [Message 123.4 ["Serge"] (makeInitPosMessage (Point3D 1.0 2.0 3.0))]
+initialMessages = [Message 123.4 ["Serge"] (InitPos $ MessageInitPos (Point3D 1.0 2.0 3.0))]
 
 --instance Simulator FleetSim where
 instance Simulator (IORef FleetSim) where
@@ -58,7 +61,12 @@ applyMessage (Just player, initMessages) m = (Just newPlayer, newMessages)
         (newPlayer, retMessages) = handleMessage player m
         newMessages              = initMessages ++ retMessages
 
+-- A simple handler that prints incoming packets
+plainHandler :: HandlerFunc
+plainHandler addr msg = putStrLn $ "From " ++ show addr ++ ": " ++ msg
+
 main = do
+    listenerId <- forkIO $ startListener "5000" plainHandler
     simulator <- newIORef (FleetSim initialMessages makePilots)
     uptime <- newIORef 0
     mainloop simulator uptime resolutionMs

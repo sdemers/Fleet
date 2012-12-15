@@ -23,7 +23,12 @@ class Simulator s where
 mainloop simulator uptime msecResolution = do
     threadDelay (msecResolution * 1000)
     modifyIORef uptime (+msecResolution)
-    --printSim simulator
+    putStrLn "Before simulation cycle"
+    printSim simulator
     dispatchMessages simulator
     simulate simulator msecResolution
+    putStrLn ""
+    putStrLn "After simulation cycle"
+    printSim simulator
+    putStrLn "-------------------------------------------------------"
     mainloop simulator uptime msecResolution

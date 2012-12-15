@@ -70,7 +70,7 @@ instance JSON MessageInitPos where
     readJSON (JSObject obj) = MessageInitPos <$> f "position"
         where f x = valFromObj x obj
 
--- Example encoded message
+-- Example encoded message (initial position)
 -- {
 --     "frequency":123.4,
 --     "recipients":["Serge"],
@@ -80,12 +80,6 @@ instance JSON MessageInitPos where
 --         }
 --     }
 -- }
-
-showInitPos = encode $ Message 123.4 ["Serge"] (InitPos $ MessageInitPos (Point3D 0.1 0.2 0.3))
-showTargetSpeed = encode $ Message 123.4 ["Serge"] (TargetSpeed $ MessageTargetSpeed 25.0)
-
-encodedInitPos = "{\"frequency\":123.4,\"recipients\":[\"Serge\"],\"body\":{\"initialPosition\":{\"position\":{\"x\":0.1,\"y\":0.2,\"z\":0.3}}}}"
-receivedInitPos = parseMessage encodedInitPos
 
 -- | MessageTargetSpeed
 data MessageTargetSpeed = MessageTargetSpeed {

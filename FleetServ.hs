@@ -5,6 +5,7 @@ import Data.List
 import Data.Maybe
 
 import Control.Concurrent
+import Control.Monad (forever)
 
 import Fleet.Core
 import Fleet.Core.Common
@@ -15,7 +16,7 @@ import Fleet.Comm.Message
 import Fleet.Comm.Radio
 
 -- Simulation resolution (100 msec)
-resolutionMs = 100
+resolutionMs = 1000
 resolution = resolutionMs * 1000
 
 data FleetSim = FleetSim {
@@ -34,11 +35,11 @@ instance Simulator (IORef FleetSim) where
 
     simulate s t = do
         newSim <- readIORef s
-        print newSim
+        return ()
 
     printSim s = do
         sim <- readIORef s
-        print ("Sim: " ++ show (players sim))
+        print ("Sim: " ++ show sim)
 
 dispatchSimMessages s = dispatchMessageList (messages s) (players s)
 
@@ -65,9 +66,17 @@ applyMessage (Just player, initMessages) m = (Just newPlayer, newMessages)
 plainHandler :: HandlerFunc
 plainHandler addr msg = putStrLn $ "From " ++ show addr ++ ": " ++ msg
 
+-- Handler that receives and parses a message and adds it to the queue
+jsonHandler :: IORef FleetSim -> HandlerFunc
+jsonHandler simulator addr msg =
+    case parseMessage msg of
+        Just a  -> modifyIORef simulator (addMessage a)
+        Nothing -> putStrLn $ "Error parsing message: " ++ msg
+    where
+        addMessage msg sim = FleetSim (msg : (messages sim)) (players sim)
+
 main = do
-    listenerId <- forkIO $ startListener "5000" plainHandler
     simulator <- newIORef (FleetSim initialMessages makePilots)
+    listenerId <- forkIO $ startListener "5000" (jsonHandler simulator)
     uptime <- newIORef 0
-    mainloop simulator uptime resolutionMs
-    print "Done."
+    forever $ mainloop simulator uptime resolutionMs

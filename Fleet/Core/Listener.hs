@@ -62,5 +62,3 @@ startListener port handlerfunc = withSocketsDo $
           withMVar lock
           (\a -> handlerfunc clientaddr msg >> return a)
 
---main = serveLog "5000" plainHandler
-

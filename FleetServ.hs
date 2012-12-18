@@ -43,10 +43,11 @@ dispatchSimMessages s = dispatchMessageList (messages s) (players s)
 dispatchMessageList :: [Message] -> [Player] -> FleetSim
 dispatchMessageList m p  = FleetSim newMessages newPlayers
     where
-        newPlayers   = catMaybes maybeSysPlayers ++ catMaybes maybePlayers
-        newMessages  = nub $ concat (newPlayerMessages ++ newSysMessages)
-        (maybePlayers, newPlayerMessages) = unzip $ dispatchToPlayers p m
         (maybeSysPlayers, newSysMessages) = unzip $ dispatchSystemMessages m
+        initPlayers = nub $ (p ++ catMaybes maybeSysPlayers)
+        (maybePlayers, newPlayerMessages) = unzip $ dispatchToPlayers initPlayers m
+        newMessages  = nub $ concat (newPlayerMessages ++ newSysMessages)
+        newPlayers   = catMaybes maybePlayers
 
 dispatchToPlayers :: [Player] -> [Message] -> [(Maybe Player, [Message])]
 dispatchToPlayers (pl:ps) ms = (dispatchToPlayer pl ms : dispatchToPlayers ps ms)

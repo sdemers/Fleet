@@ -14,8 +14,7 @@ handlePlayerMessage :: Player -> Message -> (Player, [Message])
 handlePlayerMessage p (PlayMessage m)
     | checkRadio p m = acceptPlayerMessage p (plMessageBody m)
     | otherwise      = (p, [])
-
-handlePlayerMessage p _ = undefined
+handlePlayerMessage p _ = (p, [])
 
 handleSystemMessage :: Message -> (Maybe Player, [Message])
 handleSystemMessage (SysMessage m) = acceptSysMessage (sysMessageBody m)

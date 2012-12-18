@@ -41,11 +41,14 @@ def sendMessage(sock, sockInfo, msg):
         sys.exit()
 
 #Send some data to remote server
-newPilotMessage = "{\"systemMessage\":{\"body\":{\"newPlayer\":{\"name\":\"Serge\",\"type\":\"pilot\",\"frequency\":123.4}}}}"
-initPosMessage = "{\"playerMessage\":{\"frequency\":123.4,\"recipients\":[\"Serge\"],\"body\":{\"initialPosition\":{\"position\":{\"x\":1,\"y\":2,\"z\":3}}}}}"
+def newPilotMessage(name):
+    return "{\"systemMessage\":{\"body\":{\"newPlayer\":{\"name\":\"" + name + "\",\"type\":\"pilot\",\"frequency\":123.4}}}}"
 
-sendMessage(s, socketInfo, newPilotMessage)
-time.sleep(2.0)
-sendMessage(s, socketInfo, initPosMessage)
+def initPosMessage(name):
+    return "{\"playerMessage\":{\"frequency\":123.4,\"recipients\":[\"" + name + "\"],\"body\":{\"initialPosition\":{\"position\":{\"x\":1,\"y\":2,\"z\":3}}}}}"
+
+sendMessage(s, socketInfo, newPilotMessage("DC132"))
+sendMessage(s, socketInfo, newPilotMessage("ACA123"))
+sendMessage(s, socketInfo, initPosMessage("DC132"))
 
 print 'Message send successfully'

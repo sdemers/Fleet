@@ -38,8 +38,7 @@ startListener port handlerfunc = withSocketsDo $
         procRequests :: MVar () -> Socket -> IO ()
         procRequests lock mastersock =
           do (connsock, clientaddr) <- accept mastersock
-             handle lock clientaddr
-               "TCPServer: Client connected"
+             handle lock clientaddr ""
              forkIO $ procMessages lock connsock clientaddr
              procRequests lock mastersock
 
@@ -51,8 +50,7 @@ startListener port handlerfunc = withSocketsDo $
              messages <- IO.hGetContents connhdl
              mapM_ (handle lock clientaddr) (lines messages)
              IO.hClose connhdl
-             handle lock clientaddr
-               "TCPServer: Client disconnected"
+             handle lock clientaddr ""
 
         -- Lock the handler before passing data to it.
         handle :: MVar () -> HandlerFunc

@@ -115,12 +115,12 @@ instance JSON PlayerMessageBody where
 buildPlayerTable = [(buildMessage InitPos "initialPosition"),
                     (buildMessage TargetSpeed "targetSpeed")]
 
-buildMessage c m o = trace m $ c <$> (valFromObj m o)
+buildMessage c m o = c <$> (valFromObj m o)
 
 applyMessageTable o mt = map (\f -> f o) mt
 
 -- | Parses a JSON-formatted string and returns Maybe Message
-parseMessage m = trace (m ++ ": " ++ show res) $ resultToMaybe res
+parseMessage m = resultToMaybe res
     where res = decode m :: Result Message
 
 -- Example encoded message (initial position)

@@ -7,16 +7,16 @@ data Pilot = Pilot {
     pilotName :: String,
     pilotRadio :: Radio,
     pilotPosition :: Point3D
-} deriving (Show)
+} deriving (Eq, Show)
 
 data Driver = Driver {
     driverName :: String,
     driverRadio :: Radio
-} deriving (Show)
+} deriving (Eq, Show)
 
 data Player = SimPilot Pilot |
               SimDriver Driver
-              deriving (Show)
+              deriving (Eq, Show)
 
 makePilot name radio = SimPilot $ Pilot name radio origin3D
 makeDriver name radio = SimDriver $ Driver name radio

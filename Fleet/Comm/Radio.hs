@@ -8,4 +8,4 @@ data RadioStatus = RadioOn | RadioOff | RadioDefective
 data Radio = Radio {
     radioFrequency :: Double,
     radioStatus :: RadioStatus
-} deriving (Show)
+} deriving (Eq, Show)

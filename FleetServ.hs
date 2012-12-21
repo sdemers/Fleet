@@ -16,6 +16,9 @@ import Fleet.Player.MessageHandler
 import Fleet.Comm.Message
 import Fleet.Comm.Radio
 
+import Fleet.Spatial.LatLong
+import Fleet.Spatial.Coord
+
 -- Simulation resolution (100 msec)
 resolutionMs = 1000
 resolution = resolutionMs * 1000
@@ -37,6 +40,8 @@ instance Simulator (IORef FleetSim) where
     printSim s = do
         sim <- readIORef s
         print ("Sim: " ++ show sim)
+
+a = makeLatLong 1.0 1.0
 
 dispatchSimMessages s = dispatchMessageList (messages s) (players s)
 

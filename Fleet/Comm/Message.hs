@@ -17,6 +17,7 @@ where
 
 import Fleet.Comm.Radio
 import Fleet.Core.Common
+import Fleet.Spatial.Cartesian
 import Fleet.Core.JSON
 import Text.JSON
 import Control.Applicative
@@ -135,7 +136,8 @@ parseMessage m = resultToMaybe res
 -- }
 
 newPlayerMess = encode $ SysMessage $ SystemMessage (NewPlayer $ MessageNewPlayer "Serge" "pilot" 123.4)
-initPosMess = encode $ PlayMessage $ PlayerMessage 123.4 ["Serge"] (InitPos $ MessageInitPos origin3D)
+initPosMess = encode $ PlayMessage $
+    PlayerMessage 123.4 ["Serge"] (InitPos $ MessageInitPos (Point3D 0.0 0.0 0.0))
 
 -- | MessageInitPos
 data MessageInitPos = MessageInitPos {

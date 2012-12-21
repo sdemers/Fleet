@@ -1,7 +1,7 @@
 module Fleet.Player where
 
 import Fleet.Comm.Radio
-import Fleet.Core.Common
+import Fleet.Spatial.Cartesian
 
 data Pilot = Pilot {
     pilotName :: String,

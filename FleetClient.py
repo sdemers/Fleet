@@ -6,7 +6,7 @@ import time
 
 try:
     #create an AF_INET, STREAM socket (TCP)
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 except socket.error, msg:
     print 'Failed to create socket. Error code: ' + str(msg[0]) + ' , Error message : ' + msg[1]
     sys.exit();
@@ -28,10 +28,10 @@ print 'Ip address of ' + host + ' is ' + remote_ip
 
 socketInfo = (remote_ip, port)
 # Connect to remote server
-s.connect(socketInfo)
+sock.connect(socketInfo)
 
 
-def sendMessage(sock, sockInfo, msg):
+def sendMessage(sock, msg):
     try :
         # Set the whole string
         sock.sendall(msg)
@@ -47,8 +47,8 @@ def newPilotMessage(name):
 def initPosMessage(name):
     return "{\"playerMessage\":{\"frequency\":123.4,\"recipients\":[\"" + name + "\"],\"body\":{\"initialPosition\":{\"position\":{\"x\":1,\"y\":2,\"z\":3}}}}}"
 
-sendMessage(s, socketInfo, newPilotMessage("DC132"))
-sendMessage(s, socketInfo, newPilotMessage("ACA123"))
-sendMessage(s, socketInfo, initPosMessage("DC132"))
+sendMessage(sock, socketInfo, newPilotMessage("DC132"))
+sendMessage(sock, socketInfo, newPilotMessage("ACA123"))
+sendMessage(sock, socketInfo, initPosMessage("DC132"))
 
 print 'Message send successfully'
